@@ -21,7 +21,7 @@ module.exports = {
   node: {fs: 'empty'},
   // Entry scripts
   entry: {
-    main: ['idempotent-babel-polyfill', path.join(__dirname, '../src/main.js')],
+    monkeysee: ['idempotent-babel-polyfill', path.join(__dirname, '../src/monkeysee.js')],
     sandbox: path.join(__dirname, '../sandbox/index.js')
   },
 

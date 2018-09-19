@@ -7,7 +7,9 @@ const package = require('../package.json')
 module.exports = merge(webpackConfig, {
   output: {
     path: path.join(__dirname, '../dist'),
-    filename: `[name].js`
+    filename: `[name].js`,
+    library: 'MonkeySee',
+    libraryTarget: 'umd'
   },
 
   plugins: [
