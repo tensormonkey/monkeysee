@@ -34,6 +34,9 @@ class MonkeySee {
       WASMBuffer: null
     }
 
+    // The tracked faces object
+    this.faces = null
+
     // Error out if we don't have support
     this.checkForMediaSupport()
 
@@ -229,7 +232,39 @@ class MonkeySee {
    * Tracks faces
    */
   trackFaces () {
-    console.log('trackFaces');
+    const ctx = this.debug.ctx
+    const resolution = this.brf.resolution
+
+    // mirrors the context
+    ctx.setTransform(-1, 0, 0, 1, resolution.widht, 0)
+    ctx.drawImage(this.debug.$webcam, 0, 0, resolution.width, resolution.height)
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+    // Get faces
+    this.brf.manager.update(ctx.getImageData(0, 0, resolution.width, resolution.height).data)
+    this.faces = this.brf.manager.getFaces()
+
+    // Do things with faces
+    this.drawFaces()
+
+    requestAnimationFrame(() => this.trackFaces())
+  }
+
+  /**
+   * Draws the faces onto the debugger canvas
+   */
+  drawFaces () {
+    this.faces.forEach(face => {
+      if (face.state === this.brf.sdk.BRFState.FACE_TRACKING_START || face.state === this.brf.sdk.BRFState.FACE_TRACKING) {
+        this.debug.ctx.strokeStyle = '#ff0'
+
+        for (let i = 0; i < face.vertices.length; i += 2) {
+          this.debug.ctx.beginPath()
+          this.debug.ctx.arc(face.vertices[i], face.vertices[i + 1], 2, 0, 2 * Math.PI)
+          this.debug.ctx.stroke()
+        }
+      }
+    })
   }
 }
 
