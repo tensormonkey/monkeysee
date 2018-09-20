@@ -19,11 +19,17 @@ class MonkeySee {
     }
 
     // BRFv4 config
-    this.brfv4 = {
+    this.brf = {
       // Will fallback to ASM if Web ASM isn't supported
       baseURL: this.isWASMSupported ? '/assets/libs/brf_wasm/' : '/assets/libs/brf_asm/',
+      // The BRFv4 Manager
+      manager: null,
+      // The BRFv4 Resolution
+      resolution: null,
+      // The loaded BRFv4 sdk library
+      sdk: null,
       // The SDK version we're using
-      sdk: 'BRFv4_JS_TK110718_v4.1.0_trial',
+      sdkName: 'BRFv4_JS_TK110718_v4.1.0_trial',
       // The Web ASM buffer
       WASMBuffer: null
     }
@@ -67,7 +73,7 @@ class MonkeySee {
   initAndMaybeReadWASMBinary () {
     if (this.isWASMSupported) {
       let xhr = new XMLHttpRequest()
-      let url = this.brfv4.baseURL + this.brfv4.sdk + '.wasm'
+      let url = this.brf.baseURL + this.brf.sdkName + '.wasm'
       let onError = err => this.throwError(err)
       let onProgress = progress => console.log(progress)
 
@@ -75,7 +81,7 @@ class MonkeySee {
       xhr.responseType = 'arraybuffer'
       xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 0 && xhr.response) {
-          this.brfv4.WASMBuffer = xhr.response
+          this.brf.WASMBuffer = xhr.response
           this.init()
         } else {
           onError()
@@ -95,6 +101,7 @@ class MonkeySee {
   init () {
     this.injectBRFv4()
     this.injectDebugger()
+    // this.startCamera()
     console.log('READY')
   }
 
@@ -106,7 +113,7 @@ class MonkeySee {
 
     $script.setAttribute('type', 'text/javascript')
     $script.setAttribute('async', true)
-    $script.setAttribute('src', this.brfv4.baseURL + this.brfv4.sdk + '.js')
+    $script.setAttribute('src', this.brf.baseURL + this.brf.sdkName + '.js')
 
     document.body.appendChild($script)
   }
@@ -144,6 +151,85 @@ class MonkeySee {
     document.body.appendChild($wrap)
     $wrap.appendChild($webcam)
     $wrap.appendChild($canvas)
+  }
+
+  /**
+   * Starts the webcam stream
+   */
+  startCamera () {
+    window.navigator.mediaDevices.getUserMedia({
+      video: {width: 640, height: 480, frameRate: 30}
+    }).then(mediaStream => {
+      this.debug.$webcam.srcObject = mediaStream
+      this.debug.$webcam.play()
+
+      if (this.debug.ctx === null) {
+        this.startBRFv4()
+      } else {
+        this.trackFaces()
+      }
+    }).catch(err => this.throwError('There are no cameras available.'))
+  }
+
+  /**
+   * Actually starts BRFv4 (once stream dimensions are known)
+   */
+  startBRFv4 () {
+    const $webcam = this.debug.$webcam
+    const $canvas = this.debug.$canvas
+
+    if ($webcam.videoWidth === 0) {
+      // @FIXME let's optimize this wait time
+      setTimeout(() => this.startBRFv4(), 50)
+    } else {
+      // Resize canvas to stream
+      $canvas.width = $webcam.videoWidth
+      $canvas.height = $webcam.videoHeight
+      this.debug.ctx = $canvas.getContext('2d')
+
+      this.waitForSDK()
+    }
+  }
+
+  /**
+   * Wait for the BRFv4 SDK to finish loading before initializing it
+   */
+  waitForSDK () {
+    // Set up the namespace and initialize BRFv4.
+    // locateFile tells the asm.js version where to find the .mem file.
+    // wasmBinary gets the preloaded .wasm file.
+    if (this.brf.sdk === null && window.hasOwnProperty('initializeBRF')) {
+      this.brf.sdk = {
+        locateFile: fileName => this.brf.baseURL + fileName,
+        wasmBinary: this.brf.WASMBuffer
+      }
+      initializeBRF(this.brf.sdk)
+    }
+
+    if (this.brf.sdk && this.brf.sdk.sdkReady) {
+      this.initSDK()
+    } else {
+      // @FIXME let's optimize this wait time
+      setTimeout(() => this.waitForSDK(), 250)
+    }
+  }
+
+  /**
+   * Finally, let's initialize the SDK
+   */
+  initSDK () {
+    this.brf.resolution = new this.brf.sdk.Rectangle(0, 0, this.debug.$canvas.width, this.debug.$canvas.height)
+    this.brf.manager = new this.brf.sdk.BRFManager()
+    this.brf.manager.init(this.brf.resolution, this.brf.resolution, 'js.monkeysee')
+
+    this.trackFaces()
+  }
+
+  /**
+   * Tracks faces
+   */
+  trackFaces () {
+    console.log('trackFaces');
   }
 }
 
