@@ -258,11 +258,31 @@ class MonkeySee {
 
     this.faces.forEach(face => {
       if (face.state === this.brf.sdk.BRFState.FACE_TRACKING_START || face.state === this.brf.sdk.BRFState.FACE_TRACKING) {
+        // Draw Triangles
         ctx.strokeStyle = '#ff0'
-        ctx.lineWidth = 3
+        ctx.lineWidth = 2
+        for (let i = 0; i < face.triangles.length; i += 3) {
+          ctx.beginPath()
+          let vertex = face.triangles[i]
+          ctx.moveTo(face.vertices[vertex * 2], face.vertices[vertex * 2 + 1])
+          vertex = face.triangles[i + 1]
+          ctx.lineTo(face.vertices[vertex * 2], face.vertices[vertex * 2 + 1])
+          vertex = face.triangles[i + 2]
+          ctx.lineTo(face.vertices[vertex * 2], face.vertices[vertex * 2 + 1])
+          ctx.stroke()
+        }
 
         // Draw Vertices
+        ctx.lineWidth = 3
         for (let i = 0; i < face.vertices.length; i += 2) {
+          let vertex = i / 2
+
+          // Set colors
+          if (vertex > 47 && vertex < 69) ctx.strokeStyle = '#f0f'
+          else if (vertex > 35 && vertex < 48) ctx.strokeStyle = '#0f0'
+          else if (vertex === 27) ctx.strokeStyle = '#f00'
+          else ctx.strokeStyle = '#ff0'
+
           ctx.beginPath()
           ctx.arc(face.vertices[i], face.vertices[i + 1], 3, 0, 2 * Math.PI)
           ctx.stroke()
