@@ -34,6 +34,12 @@ class MonkeySee {
       WASMBuffer: null
     }
 
+    this.cursor = {
+      $el: null,
+      x: -100,
+      y: -100
+    }
+
     // The tracked faces object
     this.faces = null
 
@@ -104,6 +110,7 @@ class MonkeySee {
   init () {
     this.injectBRFv4()
     this.injectDebugger()
+    this.injectCursor()
     // this.startCamera()
     console.log('READY')
   }
@@ -154,6 +161,23 @@ class MonkeySee {
     document.body.appendChild($wrap)
     $wrap.appendChild($webcam)
     $wrap.appendChild($canvas)
+  }
+
+  /**
+   * Injects the cursor the user moves around
+   */
+  injectCursor () {
+    const $cursor = this.cursor.$el = document.createElement('div')
+
+    $cursor.classList.add('monkeysee-cursor')
+    $cursor.style.position = 'fixed'
+    $cursor.style.background = '#f00'
+    $cursor.style.width = '20px'
+    $cursor.style.height = '20px'
+    $cursor.style.borderRadius = '20px'
+    $cursor.style.zIndex = 99999999999
+
+    document.body.appendChild($cursor)
   }
 
   /**
@@ -246,6 +270,7 @@ class MonkeySee {
 
     // Do things with faces
     this.drawFaces()
+    this.calculateXY()
 
     requestAnimationFrame(() => this.trackFaces())
   }
@@ -288,6 +313,30 @@ class MonkeySee {
           ctx.stroke()
         }
       }
+    })
+  }
+
+  /**
+   * Calculates the X/Y the user is facing
+   */
+  calculateXY () {
+    this.faces.forEach(face => {
+      // Maps a point on the canvas with a point on the window
+      const ratio = {
+        width: window.outerWidth / this.debug.$canvas.width,
+        height: window.outerHeight / this.debug.$canvas.height
+      }
+
+      // @TODO Include offsets and cursor dimensions
+      // Calculate X/Y
+      let x = -face.translationX * ratio.width + this.debug.$canvas.width + window.outerWidth / 2
+      let y = face.translationY * ratio.height
+      this.cursor.x = x += Math.sin(face.rotationY) * window.outerWidth
+      this.cursor.y = y += Math.sin(face.rotationX) * window.outerHeight
+
+      // Update pointer and vars
+      this.cursor.$el.style.left = `${x}px`
+      this.cursor.$el.style.top = `${y}px`
     })
   }
 }
