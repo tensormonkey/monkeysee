@@ -1,3 +1,5 @@
+const {forEach} = require('lodash')
+
 module.exports = MonkeySee => {
   /**
    * Adds a plugin
@@ -7,7 +9,7 @@ module.exports = MonkeySee => {
    *   name: {String},
    *
    *   // Called once when the .use method is called and after the plugin is added to the instance
-   *   onUse: {Function},
+   *   onUse: {Function (face)},
    *
    *   // Called once per frame, after calculations
    *   onFrame: {Function}
@@ -16,5 +18,14 @@ module.exports = MonkeySee => {
   MonkeySee.prototype.use = function (config) {
     this.plugin[config.name] = config
     config.onUse && config.onUse()
+  }
+
+  /**
+   * Called once per frame, after calculations
+   */
+  MonkeySee.prototype.onFrameHooks = function () {
+    forEach(this.plugin, (config, name) => {
+      config.onFrame && config.onFrame.call(this, this.faces[0])
+    })
   }
 }

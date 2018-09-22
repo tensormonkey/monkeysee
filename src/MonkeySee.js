@@ -90,6 +90,7 @@ class MonkeySee {
     // Do things with faces
     this.drawFaces()
     this.calculateXY()
+    this.onFrameHooks(this.faces[0])
 
     requestAnimationFrame(() => this.trackFaces())
   }
