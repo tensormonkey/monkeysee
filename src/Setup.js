@@ -1,4 +1,17 @@
+const {assign} = require('lodash')
+
 module.exports = MonkeySee => {
+  /**
+   * Applies the instantiation config
+   */
+  MonkeySee.prototype.applyConfig = function (opts) {
+    opts = assign({
+      debug: false
+    }, opts)
+
+    this.opts = opts
+  }
+
   /**
    * Reads the Web ASM Binary into a buffer if it's supported
    */

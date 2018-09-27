@@ -18,7 +18,7 @@ module.exports = MonkeySee => {
 
     // Apply minimal styles
     $webcam.setAttribute('playsinline', 'playsinline')
-    $wrap.style.display = 'inline-block'
+    $wrap.style.display = this.opts.debug ? 'inline-block' : 'none'
     $wrap.style.position = 'relative'
     $webcam.style.transform = 'scale(-1, 1)'
     $canvas.style.transform = 'scale(-1, 1)'

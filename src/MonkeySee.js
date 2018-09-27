@@ -48,6 +48,10 @@ class MonkeySee {
     // The tracked faces object
     this.faces = null
 
+    // Apply config options
+    this.opts = opts
+    this.applyConfig(opts)
+
     // Error out if we don't have support
     this.checkForMediaSupport()
 
