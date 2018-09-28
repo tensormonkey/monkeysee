@@ -83,9 +83,9 @@ module.exports = MonkeySee => {
    * Toggle Debugger
    */
   MonkeySee.prototype.toggleDebugger = function (state = null) {
-    if (typeof state === 'boolean') this.opts.debug = state
-    else this.opts.debug = !this.opts.debug
+    if (typeof state === 'boolean') this.debug.isDebugging = state
+    else this.debug.isDebugging = !this.opts.debug
 
-    this.debug.$wrap.style.display = this.opts.debug ? 'inline-block' : 'none'
+    this.debug.$wrap.style.display = this.debug.isDebugging ? 'inline-block' : 'none'
   }
 }

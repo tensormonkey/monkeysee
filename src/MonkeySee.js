@@ -13,6 +13,8 @@ class MonkeySee {
     // Properties
     // @see this.injectDebugger
     this.debug = {
+      // Whether we're actually debugging or not
+      isDebugging: false,
       // The webcam stream
       $webcam: null,
       // The canvas to display debug info on
@@ -63,8 +65,8 @@ class MonkeySee {
    * Starts the webcam stream
    */
   start () {
-    if (this.opts.debug) this.debug.$wrap.style.display = 'inline-block'
-    
+    this.toggleDebugger(this.opts.debug)
+
     window.navigator.mediaDevices.getUserMedia({
       video: {width: 640, height: 480, frameRate: 30}
     }).then(mediaStream => {
@@ -80,11 +82,23 @@ class MonkeySee {
   }
 
   /**
+   * Stop tracking and release webcam streams
+   */
+  stop () {
+    if (this.isTracking) {
+      this.isTracking = false
+      this.debug.$webcam.srcObject.getTracks().forEach(track => track.stop())
+      this.toggleDebugger(false)
+    }
+  }
+
+  /**
    * Tracks faces
    */
   trackFaces () {
     const ctx = this.debug.ctx
     const resolution = this.brf.resolution
+    this.isTracking = true
 
     // mirrors the context
     ctx.setTransform(-1, 0, 0, 1, resolution.widht, 0)
@@ -96,7 +110,7 @@ class MonkeySee {
     this.faces = this.brf.manager.getFaces()
 
     // Do things with faces
-    this.opts.debug && this.drawFaces()
+    this.debug.isDebugging && this.drawFaces()
     this.calculateXY()
     this.onFrameHooks(this.faces[0])
 
