@@ -13,6 +13,8 @@ class MonkeySee {
     // Properties
     // @see this.injectDebugger
     this.debug = {
+      // Whether we're actually debugging or not
+      isDebugging: false,
       // The webcam stream
       $webcam: null,
       // The canvas to display debug info on
@@ -48,6 +50,10 @@ class MonkeySee {
     // The tracked faces object
     this.faces = null
 
+    // Apply config options
+    this.opts = opts
+    this.applyConfig(opts)
+
     // Error out if we don't have support
     this.checkForMediaSupport()
 
@@ -59,6 +65,8 @@ class MonkeySee {
    * Starts the webcam stream
    */
   start () {
+    this.toggleDebugger(this.opts.debug)
+
     window.navigator.mediaDevices.getUserMedia({
       video: {width: 640, height: 480, frameRate: 30}
     }).then(mediaStream => {
@@ -74,11 +82,35 @@ class MonkeySee {
   }
 
   /**
+   * Stop tracking and release webcam streams
+   */
+  stop () {
+    if (this.isTracking) {
+      this.isTracking = false
+      this.debug.$webcam.srcObject.getTracks().forEach(track => track.stop())
+      this.toggleDebugger(false)
+    }
+  }
+
+  /**
+   * Toggle the tracker
+   * @param {Boolean|Null} state Whether to start (true) or stop (false), or flip between the two (null)
+   */
+  toggle (state = null) {
+    if (typeof state === 'boolean') this.tracking = state
+    else this.tracking = !this.tracking
+
+    if (this.tracking) this.start()
+    else this.stop()
+  }
+
+  /**
    * Tracks faces
    */
   trackFaces () {
     const ctx = this.debug.ctx
     const resolution = this.brf.resolution
+    this.isTracking = true
 
     // mirrors the context
     ctx.setTransform(-1, 0, 0, 1, resolution.widht, 0)
@@ -90,7 +122,7 @@ class MonkeySee {
     this.faces = this.brf.manager.getFaces()
 
     // Do things with faces
-    this.drawFaces()
+    this.debug.isDebugging && this.drawFaces()
     this.calculateXY()
     this.onFrameHooks(this.faces[0])
 
