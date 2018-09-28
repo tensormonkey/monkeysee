@@ -6,6 +6,7 @@ module.exports = MonkeySee => {
     let $webcam
     let $canvas
     let $wrap
+    let $parent
 
     // Create debug elements
     this.debug.$wrap = $wrap = document.createElement('div')
@@ -18,7 +19,7 @@ module.exports = MonkeySee => {
 
     // Apply minimal styles
     $webcam.setAttribute('playsinline', 'playsinline')
-    $wrap.style.display = this.opts.debug ? 'inline-block' : 'none'
+    $wrap.style.display = 'none'
     $wrap.style.position = 'relative'
     $webcam.style.transform = 'scale(-1, 1)'
     $canvas.style.transform = 'scale(-1, 1)'
@@ -29,7 +30,10 @@ module.exports = MonkeySee => {
     $canvas.style.height = '100%'
 
     // Inject
-    document.body.appendChild($wrap)
+    $parent = document.querySelector('.monkeysee-debug-wrap')
+    if (!$parent) $parent = document.body
+
+    $parent.appendChild($wrap)
     $wrap.appendChild($webcam)
     $wrap.appendChild($canvas)
   }

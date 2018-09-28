@@ -34,9 +34,24 @@ You can instatiate MonkeySee with the following config (defaults are shown):
 
 ```js
 const monkeysee = new MonkeySee({
-  // ... TODO
+  // Whether to show the debugger or not
+  debug: false
 })
 ```
+
+### API
+
+```js
+// Starts tracking faces and shows the webcam if debug is on
+monkeysee.start()
+
+// Toggles the debugger on (true), off (false), or flips the state (null)
+monkeysee.toggleDebugger()
+```
+
+### Debugging
+
+The debugger is loaded into the first element in the DOM with the `.monkeysee-debug-wrap`. If one doesn't exist, then it's added as the last root element of `body`.
 
 ### Plugins
 MonkeySee is built around a plugin architecture, which allows us to easily add and share functionality. We can even disable them!
